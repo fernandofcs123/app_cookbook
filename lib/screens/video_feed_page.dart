@@ -1,0 +1,49 @@
+import 'package:app_cookbook/models/video_model.dart';
+import 'package:app_cookbook/widgets/video_card.dart';
+import 'package:flutter/material.dart';
+
+class VideoFeedPage extends StatelessWidget {
+  final List<VideoModel> videos = [
+    VideoModel(
+      profileImage: "https://via.placeholder.com/50", 
+      username: "Jorge Jesus", 
+      title: "Estrogonofe de carne", 
+      likes: 100, 
+      comments: 8, 
+      shares: 2,
+    ),
+    VideoModel(
+      profileImage: "https://via.placeholder.com/50", 
+      username: "Amadeu", 
+      title: "Pamonha de milho",
+      likes: 41, 
+      comments: 2, 
+      shares: 0,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0),
+        child: ListView(
+          children: [
+            const SizedBox(height: 10),
+            const Center(
+              child: Text(
+                "Em Destaque",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Column(
+              children: videos.map((video) => VideoCard(video: video)).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
