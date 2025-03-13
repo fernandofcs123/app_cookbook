@@ -1,9 +1,7 @@
-import 'package:app_cookbook/screens/video_feed_page.dart';
 import 'package:flutter/material.dart';
-import 'screens/video_feed_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -12,101 +10,114 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Cook Book',
-      home: MyHomePage(),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _selectedIndex = 0;
-
-  static final List<Widget> _widgetOptions = <Widget>[
-    VideoFeedPage(),
-    Center(child: Text('Publicar Receita', style: TextStyle(fontSize: 20))),
-    Center(child: Text('Perfil', style: TextStyle(fontSize: 20))),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(100),
-        child: AppBar(
-          backgroundColor: const Color.fromRGBO(205, 175, 149, 1),
-          elevation: 0,
-          title: Column(
-            children: [
-              const SizedBox(height: 10),
-              const Text(
-                'Cook 📖 Book',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: SizedBox(
-                  height: 40,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: "Pesquisar receitas...",
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                      filled: true,
-                      fillColor: Colors.white,
+      debugShowCheckedModeBanner: false, // Remove o banner de debug
+      home: Scaffold(
+        backgroundColor: const Color(0xFFCDAF95), // Cor de fundo
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+            ), // Margem nas laterais
+            child: Column(
+              mainAxisAlignment:
+                  MainAxisAlignment.center, // Centraliza verticalmente
+              children: [
+                // Título "Cook Book"
+                const Text(
+                  "Cook 📖 Book",
+                  style: TextStyle(
+                    fontSize: 45, // Tamanho maior para o título
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 40), // Espaço entre título e campos
+                // Campo de Email/Telefone
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: "Email ou Telefone",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20), // Espaço entre os campos
+                // Campo de Senha
+                TextField(
+                  obscureText: true, // Esconde a senha
+                  decoration: InputDecoration(
+                    hintText: "Senha",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ), // Espaço antes do "Esqueci minha senha"
+                // Texto "Esqueci minha senha"
+                TextButton(
+                  onPressed: () {},
+                  child: const Text(
+                    "Esqueci minha senha",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16, // Cor de link
+                      decoration:
+                          TextDecoration
+                              .underline, // Sublinhado para parecer clicável
+                    ),
+                  ), // Não faz nada quando pressionado
+                ),
+
+                const SizedBox(height: 20), // Espaço antes do "Criar conta"
+                // Texto "Criar conta como botão"
+                TextButton(
+                  onPressed: () {},
+                  child: const Text(
+                    "Criar conta",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30), // Espaço antes do botão
+                // Botão de Login
+                ElevatedButton(
+                  onPressed: () {
+                    // Aqui você pode adicionar a lógica de login depois
+                    print("Botão de login pressionado!");
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white, // Cor do botão
+                    foregroundColor: Colors.black, // Cor do texto
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 15,
+                    ), // Tamanho do botão
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        20,
+                      ), // Bordas arredondadas
+                    ),
+                  ),
+                  child: const Text(
+                    "Login",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-
-      body: _widgetOptions[_selectedIndex],
-
-      bottomNavigationBar: BottomNavigationBar(
-        iconSize: 30,
-        items: <BottomNavigationBarItem>[
-          const BottomNavigationBarItem(
-            icon: Text("📖", style: TextStyle(fontSize: 24)),
-          label: 'Home',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.play_arrow_outlined),
-            label: 'Publicar',
-          ),
-          BottomNavigationBarItem(
-            icon: SizedBox(
-            width: 30,
-            height: 30,
-            child: Image.asset('assets/icons/perfil.png')
-          ),
-          label: 'Perfil',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.brown[700],
-        unselectedItemColor: Colors.grey[600],
-        backgroundColor: const Color.fromRGBO(205, 175, 149, 1),
-        onTap: _onItemTapped,
       ),
     );
   }
