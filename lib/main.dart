@@ -1,112 +1,168 @@
-import 'package:app_cookbook/screens/video_feed_page.dart';
 import 'package:flutter/material.dart';
-import 'screens/video_feed_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Cook Book',
-      home: MyHomePage(),
+      home: CookBookScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
+class CookBookScreen extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _CookBookScreenState createState() => _CookBookScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _selectedIndex = 0;
-
-  static final List<Widget> _widgetOptions = <Widget>[
-    VideoFeedPage(),
-    Center(child: Text('Publicar Receita', style: TextStyle(fontSize: 20))),
-    Center(child: Text('Perfil', style: TextStyle(fontSize: 20))),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+class _CookBookScreenState extends State<CookBookScreen> {
+  // Variáveis para controlar os checkboxes
+  bool salgado = false;
+  bool doce = false;
+  bool agridoce = false;
+  bool fit = false;
+  bool saudavel = false;
+  bool rapido = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(100),
-        child: AppBar(
-          backgroundColor: const Color.fromRGBO(205, 175, 149, 1),
-          elevation: 0,
-          title: Column(
-            children: [
-              const SizedBox(height: 10),
-              const Text(
-                'Cook 📖 Book',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: SizedBox(
-                  height: 40,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: "Pesquisar receitas...",
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Icon(Icons.book), // Ícone de livro
+            SizedBox(width: 8), // Espaçamento
+            Text('Cook Book'), // Título
+          ],
+        ),
+        backgroundColor: Colors.brown[300], // Cor de fundo aproximada
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              color: Colors.brown[200], // Cor do card aproximada
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Filtros',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                      filled: true,
-                      fillColor: Colors.white,
                     ),
-                  ),
+                    CheckboxListTile(
+                      title: Text('Salgado'),
+                      value: salgado,
+                      onChanged: (value) {
+                        setState(() {
+                          salgado = value!;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: Text('Doce'),
+                      value: doce,
+                      onChanged: (value) {
+                        setState(() {
+                          doce = value!;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: Text('Agridoce'),
+                      value: agridoce,
+                      onChanged: (value) {
+                        setState(() {
+                          agridoce = value!;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: Text('Fit'),
+                      value: fit,
+                      onChanged: (value) {
+                        setState(() {
+                          fit = value!;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: Text('Saudável'),
+                      value: saudavel,
+                      onChanged: (value) {
+                        setState(() {
+                          saudavel = value!;
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: Text('Rápido'),
+                      value: rapido,
+                      onChanged: (value) {
+                        setState(() {
+                          rapido = value!;
+                        });
+                      },
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            // Lógica para "Criar"
+                            print('Criar pressionado');
+                          },
+                          child: Text('Criar'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Lógica para "Voltar"
+                            print('Voltar pressionado');
+                          },
+                          child: Text('Voltar'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-
-      body: _widgetOptions[_selectedIndex],
-
-      bottomNavigationBar: BottomNavigationBar(
-        iconSize: 30,
-        items: <BottomNavigationBarItem>[
-          const BottomNavigationBarItem(
-            icon: Text("📖", style: TextStyle(fontSize: 24)),
-          label: 'Home',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.play_arrow_outlined),
-            label: 'Publicar',
-          ),
-          BottomNavigationBarItem(
-            icon: SizedBox(
-            width: 30,
-            height: 30,
-            child: Image.asset('assets/icons/perfil.png')
-          ),
-          label: 'Perfil',
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () {
+                // Lógica para "Publicar"
+                print('Publicar pressionado');
+              },
+              child: Text('Publicar'),
+            ),
           ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.brown[700],
-        unselectedItemColor: Colors.grey[600],
-        backgroundColor: const Color.fromRGBO(205, 175, 149, 1),
-        onTap: _onItemTapped,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.play_arrow),
+            label: 'Postar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Perfil',
+          ),
+        ],
       ),
     );
   }
