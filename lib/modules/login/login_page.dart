@@ -46,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
                   TituloWidget(),
                   const SizedBox(height: 150), 
                   
-                  InputLoginWidget(hint: "Email ou Telefone", controller: _emailController,
+                  InputLoginWidget(hint: "Email", controller: _emailController,
                   validator: Validatorless.multiple([
                     Validatorless.email("E-mail inválido"),
                     Validatorless.required("Campo obrigatório")

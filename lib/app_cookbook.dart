@@ -14,7 +14,7 @@ class AppCookbook extends StatelessWidget {
       routes: {
         '/':(_)=> LoginPage(),
         '/cadastrar':(_)=> CadastroPage(),
-        '/home':(_)=> HomePage(),
+        '/home':(_)=> MyHomePage(),
       },
     );
   }
