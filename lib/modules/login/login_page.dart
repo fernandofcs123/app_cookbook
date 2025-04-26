@@ -66,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
                   
                   const SizedBox(height: 80), // Espaço antes do botão
                   
-                  ElevatedbuttonWidget(nome: "Login", metodo: _login,)
+                  ElevatedbuttonWidget(nome: "Login", metodo: _login, botaoKey: const Key("botao_login"))
                 ],
               ),
             ),

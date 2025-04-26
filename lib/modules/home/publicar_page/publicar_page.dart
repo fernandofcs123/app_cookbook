@@ -74,7 +74,7 @@ class PublicarPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xD9D9D9),
+                    backgroundColor: Color(0xFFD9D9D9),
                     minimumSize: const Size(double.infinity, 50), // Tamanho maior
                   ),
                   child: const Text('Adicionar filtros', style: TextStyle(color: Colors.black, fontSize: 18)),
@@ -95,7 +95,7 @@ class PublicarPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xD9D9D9),
+                    backgroundColor: Color(0xFFD9D9D9),
                     minimumSize: const Size(double.infinity, 50), // Tamanho maior
                   ),
                   child: const Text('Publicar', style: TextStyle(color: Colors.black, fontSize: 18)),

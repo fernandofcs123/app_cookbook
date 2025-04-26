@@ -77,9 +77,9 @@ class _CadastroPageState extends State<CadastroPage> {
                   
                   const SizedBox(height: 50), 
                   
-                  ElevatedbuttonWidget(nome: "   Criar   ", metodo: _cadastrar,),
+                  ElevatedbuttonWidget(nome: "   Criar   ", metodo: _cadastrar, botaoKey: const Key("botao_criar"),),
                   const SizedBox(height: 15),
-                  ElevatedbuttonWidget(nome: "Voltar", metodo: _voltar,),
+                  ElevatedbuttonWidget(nome: "Voltar", metodo: _voltar, botaoKey: const Key("botao_criar")),
             
             
                 ],

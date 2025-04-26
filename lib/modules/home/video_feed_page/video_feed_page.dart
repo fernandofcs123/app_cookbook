@@ -20,6 +20,14 @@ class VideoFeedPage extends StatelessWidget {
       comments: 2, 
       shares: 0,
     ),
+    VideoModel(
+      profileImage: "https://via.placeholder.com/50", 
+      username: "Amadeu", 
+      title: "Pamonha de milho",
+      likes: 41, 
+      comments: 2, 
+      shares: 0,
+    ),
   ];
 
   @override

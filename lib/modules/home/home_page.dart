@@ -1,4 +1,4 @@
-import 'package:app_cookbook/modules/home/publicar_page/antigo_publicar_page.dart';
+import 'package:app_cookbook/modules/home/perfil_page/perfil_page.dart';
 import 'package:app_cookbook/modules/home/publicar_page/publicar_page.dart';
 import 'package:app_cookbook/modules/home/video_feed_page/video_feed_page.dart';
 import 'package:app_cookbook/ui/appbar_widget.dart';
@@ -17,8 +17,8 @@ class _MyHomePageState extends State<MyHomePage> {
   static final List<Widget> _widgetOptions = <Widget>[
     VideoFeedPage(),
     PublicarPage(),
-    // PublicarPageAntigo(),
-    Center(child: Text('Perfil', style: TextStyle(fontSize: 20))),
+    PerfilPage(),
+    // Center(child: Text('Perfil', style: TextStyle(fontSize: 20))),
   ];
 
   void _onItemTapped(int index) {
