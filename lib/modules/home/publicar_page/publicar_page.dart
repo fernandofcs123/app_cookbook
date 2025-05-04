@@ -1,8 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PublicarPage extends StatelessWidget {
+class PublicarPage extends StatefulWidget {
   const PublicarPage({super.key});
+
+  @override
+  State<PublicarPage> createState() => _PublicarPageState();
+}
+
+class _PublicarPageState extends State<PublicarPage> {
+  final TextEditingController tituloController = TextEditingController();
+  final TextEditingController descricaoController = TextEditingController();
+
+  Future<void> publicarVideo() async {
+    final titulo = tituloController.text.trim();
+    final descricao = descricaoController.text.trim();
+
+    if (titulo.isEmpty || descricao.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Preencha todos os campos"))
+      );
+      return;
+    }
+    try {
+      await FirebaseFirestore.instance.collection('videos').add({
+        'titulo': titulo,
+        'descricao': descricao,
+        'data': Timestamp.now(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Publicado com sucesso!"))
+      );
+
+      tituloController.clear();
+      descricaoController.clear();
+    } catch (err) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erro ao publicar: $err")),
+      );
+    }
+    
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +79,7 @@ class PublicarPage extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             TextField(
+              controller: tituloController,
               decoration: InputDecoration(
                 labelText: 'Título do vídeo',
                 border: OutlineInputBorder(
@@ -51,6 +92,7 @@ class PublicarPage extends StatelessWidget {
             const SizedBox(height: 20),
             // Campo de texto "descrição"
             TextField(
+              controller: descricaoController,
               decoration: InputDecoration(
                 labelText: 'Descrição',
                 border: OutlineInputBorder(
@@ -88,12 +130,7 @@ class PublicarPage extends StatelessWidget {
               child: FractionallySizedBox(
                 widthFactor: 0.5,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Ação do botão
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Publicar clicado!')),
-                    );
-                  },
+                  onPressed: publicarVideo,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFFD9D9D9),
                     minimumSize: const Size(double.infinity, 50), // Tamanho maior
