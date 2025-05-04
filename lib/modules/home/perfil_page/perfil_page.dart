@@ -1,6 +1,5 @@
 import 'package:app_cookbook/models/video_model.dart';
 import 'package:app_cookbook/ui/elevated_button_widget.dart';
-import 'package:app_cookbook/ui/video_card.dart';
 import 'package:app_cookbook/ui/video_perfil_card.dart';
 import 'package:flutter/material.dart';
 
@@ -8,6 +7,22 @@ class PerfilPage extends StatelessWidget {
   PerfilPage({super.key});
 
   final List<VideoModel> videos = [
+    VideoModel(
+      profileImage: "https://via.placeholder.com/50", 
+      username: "Jorge Jesus", 
+      title: "Estrogonofe de carne", 
+      likes: 100, 
+      comments: 8, 
+      shares: 2,
+    ),
+    VideoModel(
+      profileImage: "https://via.placeholder.com/50", 
+      username: "Jorge Jesus", 
+      title: "Estrogonofe de carne", 
+      likes: 100, 
+      comments: 8, 
+      shares: 2,
+    ),
     VideoModel(
       profileImage: "https://via.placeholder.com/50", 
       username: "Jorge Jesus", 
@@ -55,6 +70,7 @@ class PerfilPage extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         children: [
+          const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(

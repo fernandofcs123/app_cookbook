@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class InputLoginWidget extends StatelessWidget {
@@ -28,6 +29,23 @@ class InputLoginWidget extends StatelessWidget {
       mask: '(##) #####-####',
       filter: { "#": RegExp(r'[0-9]') },
     );
+
+    var onlyLettersFormatter = FilteringTextInputFormatter.allow(
+      RegExp(r'[a-zA-Z\s]'),
+    );
+
+    var emailformatter = FilteringTextInputFormatter.allow(
+      RegExp(r'[a-zA-Z0-9_.@-]'),
+    );
+
+    List<TextInputFormatter> formatters = [];
+    if (isPhone) {
+      formatters.add(phoneFormatter);
+    } else if (hint.toLowerCase() == "nome") {
+      formatters.add(onlyLettersFormatter);
+    } else if (hint.toLowerCase() == "e-mail") {
+      formatters.add(emailformatter);
+    }
     
     return TextFormField(
       controller: controller,
@@ -46,7 +64,7 @@ class InputLoginWidget extends StatelessWidget {
       obscureText: obscure,
       keyboardType: type,
       validator: validator,
-      inputFormatters: isPhone ? [phoneFormatter] : [],
+      inputFormatters: formatters,
     );
   }
 }

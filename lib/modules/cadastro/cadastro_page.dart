@@ -63,7 +63,13 @@ class _CadastroPageState extends State<CadastroPage> {
                   InputLoginWidget(hint: "E-mail", controller: _emailController,
                   validator: Validatorless.multiple([
                     Validatorless.email("E-mail inválido"),
-                    Validatorless.required("Campo obrigatório")
+                    Validatorless.required("Campo obrigatório"),
+                    (value) {
+                      if (value != null && value.contains(" ")) {
+                        return "Não pode conter espaços";
+                      }
+                      return null;
+                    }
                   ])),
                   const SizedBox(height: 10), 
                   InputLoginWidget(hint: "Senha", controller: _senhaController, obscure: true,
@@ -79,7 +85,7 @@ class _CadastroPageState extends State<CadastroPage> {
                   
                   ElevatedbuttonWidget(nome: "   Criar   ", metodo: _cadastrar, botaoKey: const Key("botao_criar"),),
                   const SizedBox(height: 15),
-                  ElevatedbuttonWidget(nome: "Voltar", metodo: _voltar, botaoKey: const Key("botao_criar")),
+                  ElevatedbuttonWidget(nome: "Voltar", metodo: _voltar, botaoKey: const Key("botao_voltar")),
             
             
                 ],
