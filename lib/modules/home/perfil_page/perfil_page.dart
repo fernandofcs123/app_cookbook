@@ -1,144 +1,50 @@
-import 'package:app_cookbook/models/video_model.dart';
-import 'package:app_cookbook/ui/elevated_button_widget.dart';
-import 'package:app_cookbook/ui/video_perfil_card.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:app_cookbook/models/video_model.dart';
+import 'package:app_cookbook/ui/video_perfil_card.dart';
 
 class PerfilPage extends StatelessWidget {
-  PerfilPage({super.key});
-
-  final List<VideoModel> videos = [
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Jorge Jesus", 
-      title: "Estrogonofe de carne", 
-      likes: 100, 
-      comments: 8, 
-      shares: 2,
-    ),
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Jorge Jesus", 
-      title: "Estrogonofe de carne", 
-      likes: 100, 
-      comments: 8, 
-      shares: 2,
-    ),
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Jorge Jesus", 
-      title: "Estrogonofe de carne", 
-      likes: 100, 
-      comments: 8, 
-      shares: 2,
-    ),
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Jorge Jesus", 
-      title: "Estrogonofe de frango", 
-      likes: 100, 
-      comments: 8, 
-      shares: 2,
-    ),
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Jorge Jesus", 
-      title: "Estrogonofe de frango", 
-      likes: 100, 
-      comments: 8, 
-      shares: 2,
-    ),
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Jorge Jesus", 
-      title: "Estrogonofe de frango", 
-      likes: 100, 
-      comments: 8, 
-      shares: 2,
-    ),
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Amadeu", 
-      title: "Pamonha de milho",
-      likes: 41, 
-      comments: 2, 
-      shares: 0,
-    ),
-  ];
+  const PerfilPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.black,
-                ),
-                const SizedBox(width: 16,),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Jorge Jesus",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4,),
-                    const Text("@JorgeJ"),
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
-                  ],
-                ),
-                const Spacer(),
-                ElevatedbuttonWidget(nome: 'Seguir',metodo: () {},),
-                
-              ],
-            ),
-            
-          ),
-          const SizedBox(height: 24,),
+    // Query: só meus vídeos
+    final Stream<QuerySnapshot> meusVideosStream = FirebaseFirestore.instance
+      .collection('videos')
+      .where('uid', isEqualTo: uid)
+      .orderBy('data', descending: true)
+      .snapshots();
 
-          const Text(
-            "Vídeos",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+    return Scaffold(
+      appBar: AppBar(title: const Text("Meu Perfil")),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: meusVideosStream,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text("Erro: ${snapshot.error}"),);
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final docs = snapshot.data!.docs;
+          print("Encontrei ${docs.length} videos para o uid $uid");
+          if (docs.isEmpty) {
+            return const Center(child: Text("Voce ainda nao publicou vídeos"),);
+          }
 
-          const SizedBox(height: 16,),
+          final meusVideos = docs
+            .map((d) => VideoModel.fromMap(d.data() as Map<String, dynamic>))
+            .toList();
 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                for (int i =0; i < videos.length; i+=2)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: VideoPerfilCard(video: videos[i]),
-                      ),
-                      const SizedBox(width: 8,),
-                      if (i+1 < videos.length)
-                        Expanded(
-                          child: VideoPerfilCard(video: videos[i+1]),
-                        )
-                      else
-                        const Expanded(child: SizedBox()),
-
-                    ],
-                  )
-              ],
-            ),
-          ),
-          const SizedBox(height: 24,)
-        ],
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            itemCount: meusVideos.length,
+            itemBuilder: (_, i) => VideoPerfilCard(video: meusVideos[i]),
+          );
+        },
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,6 +17,8 @@ class _PublicarPageState extends State<PublicarPage> {
   Future<void> publicarVideo() async {
     final titulo = tituloController.text.trim();
     final descricao = descricaoController.text.trim();
+    final user = FirebaseAuth.instance.currentUser;
+    
 
     if (titulo.isEmpty || descricao.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -23,12 +26,25 @@ class _PublicarPageState extends State<PublicarPage> {
       );
       return;
     }
+
+    if (user == null ){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Usuário não autenticado"))
+      );
+      return;
+    }
     try {
       await FirebaseFirestore.instance.collection('videos').add({
-        'titulo': titulo,
-        'descricao': descricao,
-        'data': Timestamp.now(),
-      });
+      'titulo': titulo,
+      'descricao': descricao,
+      'data': Timestamp.now(),
+      'uid': user.uid,
+      'username': user.displayName ?? 'Usuário',
+      'profileImage': user.photoURL ?? '',
+      'likes': 0,
+      'comments': 0,
+      'shares': 0,
+    });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Publicado com sucesso!"))

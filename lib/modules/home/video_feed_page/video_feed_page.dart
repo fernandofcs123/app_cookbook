@@ -1,77 +1,42 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:app_cookbook/models/video_model.dart';
 import 'package:app_cookbook/ui/video_card.dart';
-import 'package:flutter/material.dart';
 
 class VideoFeedPage extends StatelessWidget {
-  final List<VideoModel> videos = [
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Jorge Jesus", 
-      title: "Estrogonofe de carne", 
-      likes: 100, 
-      comments: 8, 
-      shares: 2,
-    ),
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Amadeu", 
-      title: "Pamonha de milho",
-      likes: 41, 
-      comments: 2, 
-      shares: 0,
-    ),
-    VideoModel(
-      profileImage: "https://via.placeholder.com/50", 
-      username: "Amadeu", 
-      title: "Pamonha de milho",
-      likes: 41, 
-      comments: 2, 
-      shares: 0,
-    ),
-  ];
+  const VideoFeedPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Query: todos os vídeos, ordenados por data decrescente
+    final Stream<QuerySnapshot> feedStream = FirebaseFirestore.instance
+      .collection('videos')
+      .orderBy('data', descending: true)
+      .snapshots();
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Container(
-            color: const Color.fromRGBO(205, 175, 149, 1),
-            padding: const EdgeInsets.fromLTRB(15,5,15,20),
-            width: double.infinity,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: "Pesquisa",
-                  border: InputBorder.none,
-                  icon: const Icon(Icons.search, color: Colors.black54,),
-                ),
-                onChanged: (value) {
+      body: StreamBuilder<QuerySnapshot>(
+        stream: feedStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text("Nenhum vídeo disponível."));
+          }
 
-                },
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15.0),
-              child: ListView(
-                children: [
-                  const SizedBox(height: 15),
-                  Column(
-                    children: videos.map((video) => VideoCard(video: video)).toList(),
-                  ),
-                ],
-              ),
-            )
-          )
-        ],
+          // Converte cada doc num VideoModel e exibe VideoCard
+          final videos = snapshot.data!.docs.map((doc) {
+            return VideoModel.fromMap(doc.data() as Map<String, dynamic>);
+          }).toList();
+
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            itemCount: videos.length,
+            itemBuilder: (_, i) => VideoCard(video: videos[i]),
+          );
+        },
       ),
     );
   }

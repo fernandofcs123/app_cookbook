@@ -2,6 +2,7 @@ import 'package:app_cookbook/ui/elevated_button_widget.dart';
 import 'package:app_cookbook/ui/text_button_widget.dart';
 import 'package:app_cookbook/ui/text_form_field_widget.dart';
 import 'package:app_cookbook/ui/titulo_widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:validatorless/validatorless.dart';
 
@@ -18,9 +19,19 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
 
-  void _login () {
+  void _login () async {
     if (_formKey.currentState!.validate()){
-      Navigator.of(context).pushNamed("/home");
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _senhaController.text.trim(),
+        );
+        Navigator.of(context).pushReplacementNamed("/home");
+      } on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erro: ${e.message}")),
+        );
+      }
     }
   }
 
