@@ -1,3 +1,4 @@
+import 'package:app_cookbook/modules/home/video_page/video_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:app_cookbook/models/video_model.dart';
@@ -34,7 +35,20 @@ class VideoFeedPage extends StatelessWidget {
           return ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
             itemCount: videos.length,
-            itemBuilder: (_, i) => VideoCard(video: videos[i]),
+            // itemBuilder: (_, i) => VideoCard(video: videos[i]),
+            itemBuilder: (context, i) {
+              final video = videos[i];
+              return InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => VideoDetailPage(video: video),
+                    )
+                  );
+                },
+                child: VideoCard(video: video),
+              );
+            }
           );
         },
       ),

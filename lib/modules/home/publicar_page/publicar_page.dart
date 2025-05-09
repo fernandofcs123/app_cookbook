@@ -1,158 +1,196 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io'         show File;
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class PublicarPage extends StatefulWidget {
-  const PublicarPage({super.key});
+  const PublicarPage({Key? key}) : super(key: key);
 
   @override
   State<PublicarPage> createState() => _PublicarPageState();
 }
 
 class _PublicarPageState extends State<PublicarPage> {
-  final TextEditingController tituloController = TextEditingController();
-  final TextEditingController descricaoController = TextEditingController();
+  final tituloController = TextEditingController();
+  final descricaoController = TextEditingController();
 
-  Future<void> publicarVideo() async {
+  // No mobile: File; no web: bytes
+  File? _videoFile;
+  Uint8List? _videoBytes;
+  String? _videoName;
+
+  bool _isUploading = false;
+
+  Future<void> _pickVideo() async {
+    // Mobile: pedir permissão
+    if (!kIsWeb) {
+      final status = await Permission.storage.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Permissão de armazenamento negada.")),
+        );
+        return;
+      }
+    }
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.video,
+      allowMultiple: false,
+      withData: kIsWeb,           // pega bytes no web
+    );
+
+    if (result == null) return;
+
+    final file = result.files.single;
+    setState(() {
+      _videoName = file.name;
+      if (kIsWeb) {
+        _videoBytes = file.bytes;
+        _videoFile = null;
+      } else {
+        _videoFile = File(file.path!);
+        _videoBytes = null;
+      }
+    });
+  }
+
+  Future<void> _uploadAndSave() async {
+    final user = FirebaseAuth.instance.currentUser;
     final titulo = tituloController.text.trim();
     final descricao = descricaoController.text.trim();
-    final user = FirebaseAuth.instance.currentUser;
-    
 
+    if (_videoFile == null && _videoBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Selecione um vídeo primeiro.")),
+      );
+      return;
+    }
     if (titulo.isEmpty || descricao.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Preencha todos os campos"))
+        const SnackBar(content: Text("Preencha título e descrição.")),
+      );
+      return;
+    }
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Usuário não autenticado.")),
       );
       return;
     }
 
-    if (user == null ){
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Usuário não autenticado"))
-      );
-      return;
-    }
+    setState(() => _isUploading = true);
+
     try {
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${_videoName ?? 'video.mp4'}';
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('videos/${user.uid}/$fileName');
+
+      late TaskSnapshot uploadTask;
+
+      if (kIsWeb) {
+        // Web: envia bytes
+        uploadTask = await storageRef.putData(
+          _videoBytes!,
+          SettableMetadata(contentType: 'video/mp4'),
+        );
+      } else {
+        // Mobile: envia File
+        uploadTask = await storageRef.putFile(_videoFile!);
+      }
+
+      final videoUrl = await uploadTask.ref.getDownloadURL();
+
+      final userDoc = await FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(user.uid)
+        .get();
+
+      final nomeUsuario = userDoc.data()?['nome'] ?? 'Usuário';
+
+      // Salva metadados no Firestore
       await FirebaseFirestore.instance.collection('videos').add({
-      'titulo': titulo,
-      'descricao': descricao,
-      'data': Timestamp.now(),
-      'uid': user.uid,
-      'username': user.displayName ?? 'Usuário',
-      'profileImage': user.photoURL ?? '',
-      'likes': 0,
-      'comments': 0,
-      'shares': 0,
-    });
+        'uid'         : user.uid,
+        'username'    : nomeUsuario,
+        'profileImage': user.photoURL ?? '',
+        'titulo'      : titulo,
+        'descricao'   : descricao,
+        'data'        : FieldValue.serverTimestamp(),
+        'likes'       : 0,
+        'comments'    : 0,
+        'shares'      : 0,
+        'videoUrl'    : videoUrl,
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Publicado com sucesso!"))
+        const SnackBar(content: Text("Publicado com sucesso!")),
       );
-
+      // limpa seleção
+      setState(() {
+        _videoFile = null;
+        _videoBytes = null;
+        _videoName = null;
+      });
       tituloController.clear();
       descricaoController.clear();
-    } catch (err) {
+
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erro ao publicar: $err")),
+        SnackBar(content: Text("Erro ao publicar: $e")),
       );
+    } finally {
+      setState(() => _isUploading = false);
     }
-    
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Publicar Vídeo')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
-            Center(
-              child: Container(
-                width: 350,
-                height: 200,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.play_arrow, size: 60, color: Colors.black),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Publicar vídeo",
-                      style: GoogleFonts.cinzel(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  ],
-                ),
-              ),
+            ElevatedButton.icon(
+              onPressed: _pickVideo,
+              icon: const Icon(Icons.video_library),
+              label: const Text('Escolher Vídeo'),
             ),
-            const SizedBox(height: 30),
+            if (_videoName != null) ...[
+              const SizedBox(height: 8),
+              Text('Selecionado: $_videoName'),
+            ],
+            const SizedBox(height: 16),
             TextField(
               controller: tituloController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Título do vídeo',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                
-
+                border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 20),
-            // Campo de texto "descrição"
+            const SizedBox(height: 16),
             TextField(
               controller: descricaoController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Descrição',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+                border: OutlineInputBorder(),
               ),
-              maxLines: 5, // Permite várias linhas para descrição
+              maxLines: 3,
             ),
-            const SizedBox(height: 30),
-            // Botão "Adicionar Filtros"
-            Align(
-              alignment: Alignment.center,
-              child: FractionallySizedBox(
-                widthFactor: 0.8,
-                child: ElevatedButton(
-                  
-                  onPressed: () {
-                    // Ação do botão
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Adicionar filtros clicado!')),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFD9D9D9),
-                    minimumSize: const Size(double.infinity, 50), // Tamanho maior
-                  ),
-                  child: const Text('Adicionar filtros', style: TextStyle(color: Colors.black, fontSize: 18)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Botão "Publicar" na parte inferior
-            Align(
-              alignment: Alignment.center,
-              child: FractionallySizedBox(
-                widthFactor: 0.5,
-                child: ElevatedButton(
-                  onPressed: publicarVideo,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFD9D9D9),
-                    minimumSize: const Size(double.infinity, 50), // Tamanho maior
-                  ),
-                  child: const Text('Publicar', style: TextStyle(color: Colors.black, fontSize: 18)),
-                ),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isUploading ? null : _uploadAndSave,
+                child: _isUploading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Publicar'),
               ),
             ),
           ],

@@ -9,6 +9,7 @@ class VideoModel {
   final int shares;
   final String uid;
   final String descricao;
+  final String videoUrl;
   final DateTime data;     // melhor usar DateTime aqui
 
   VideoModel({
@@ -21,6 +22,7 @@ class VideoModel {
     required this.uid,
     required this.descricao,
     required this.data,
+    required this.videoUrl,
   });
 
   factory VideoModel.fromMap(Map<String, dynamic> map) {
@@ -34,6 +36,7 @@ class VideoModel {
       uid        : map['uid']          as String? ?? '',
       descricao  : map['descricao']    as String? ?? '',
       data       : (map['data']        as Timestamp).toDate(),
+      videoUrl: map['videoUrl']  as String? ?? '',
     );
   }
 }
