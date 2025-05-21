@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:validatorless/validatorless.dart';
 
 class CadastroPage extends StatefulWidget {
@@ -69,7 +70,20 @@ class _CadastroPageState extends State<CadastroPage> {
               children: [
                 // Título "Cook Book"
                   TituloWidget(),
-                  const SizedBox(height: 150), 
+
+                  const SizedBox(height: 100), 
+
+                  Text(
+                    "Criar nova conta",
+                    style: GoogleFonts.cinzel(
+                      fontSize: 22, // Tamanho maior para o título
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      
+                    ),
+                  ),
+
+                  const SizedBox(height: 45), 
                   
                   InputLoginWidget(hint: "Nome", controller: _nomeController,
                   validator: Validatorless.required("Campo obrigatório")),// Espaço entre título e campos

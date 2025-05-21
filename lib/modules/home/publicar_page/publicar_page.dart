@@ -1,4 +1,6 @@
-import 'dart:io'         show File;
+// lib/modules/home/publicar_page.dart
+
+import 'dart:io' show File;
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:app_cookbook/services/nutrition_service.dart';
 
 class PublicarPage extends StatefulWidget {
   const PublicarPage({Key? key}) : super(key: key);
@@ -16,63 +19,81 @@ class PublicarPage extends StatefulWidget {
 }
 
 class _PublicarPageState extends State<PublicarPage> {
-  final tituloController = TextEditingController();
-  final descricaoController = TextEditingController();
+  final _tituloCtrl    = TextEditingController();
+  final _descricaoCtrl = TextEditingController();
+  final _receitaCtrl   = TextEditingController();
 
-  // No mobile: File; no web: bytes
   File? _videoFile;
   Uint8List? _videoBytes;
   String? _videoName;
 
-  bool _isUploading = false;
+  String _nutritionText    = '';
+  bool   _loadingNutrition = false;
+  bool   _isUploading      = false;
+
+  Future<bool> _requestStoragePermission() async {
+    if (kIsWeb) return true;
+    final status = await Permission.storage.request();
+    return status.isGranted;
+  }
 
   Future<void> _pickVideo() async {
-    // Mobile: pedir permissão
-    if (!kIsWeb) {
-      final status = await Permission.storage.request();
-      if (!status.isGranted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Permissão de armazenamento negada.")),
-        );
-        return;
-      }
+    if (!await _requestStoragePermission()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Permissão de armazenamento negada.")),
+      );
+      return;
     }
-
     final result = await FilePicker.platform.pickFiles(
       type: FileType.video,
       allowMultiple: false,
-      withData: kIsWeb,           // pega bytes no web
+      withData: kIsWeb,
     );
-
     if (result == null) return;
-
-    final file = result.files.single;
+    final f = result.files.single;
     setState(() {
-      _videoName = file.name;
+      _videoName = f.name;
       if (kIsWeb) {
-        _videoBytes = file.bytes;
-        _videoFile = null;
+        _videoBytes = f.bytes;
+        _videoFile  = null;
       } else {
-        _videoFile = File(file.path!);
+        _videoFile  = File(f.path!);
         _videoBytes = null;
       }
     });
   }
 
+  Future<void> _fetchNutrition() async {
+    final text = _receitaCtrl.text.trim();
+    if (text.isEmpty) return;
+    setState(() {
+      _loadingNutrition = true;
+      _nutritionText    = '';
+    });
+    try {
+      final resp = await NutritionService.getNutrition(text);
+      setState(() => _nutritionText = resp);
+    } catch (e) {
+      setState(() => _nutritionText = 'Erro ao gerar nutrição: $e');
+    } finally {
+      setState(() => _loadingNutrition = false);
+    }
+  }
+
   Future<void> _uploadAndSave() async {
-    final user = FirebaseAuth.instance.currentUser;
-    final titulo = tituloController.text.trim();
-    final descricao = descricaoController.text.trim();
+    final user      = FirebaseAuth.instance.currentUser;
+    final titulo    = _tituloCtrl.text.trim();
+    final descricao = _descricaoCtrl.text.trim();
 
     if (_videoFile == null && _videoBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Selecione um vídeo primeiro.")),
+        const SnackBar(content: Text("Selecione um vídeo.")),
       );
       return;
     }
-    if (titulo.isEmpty || descricao.isEmpty) {
+    if (titulo.isEmpty || descricao.isEmpty || _receitaCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Preencha título e descrição.")),
+        const SnackBar(content: Text("Preencha todos os campos.")),
       );
       return;
     }
@@ -86,40 +107,39 @@ class _PublicarPageState extends State<PublicarPage> {
     setState(() => _isUploading = true);
 
     try {
+      // upload vídeo
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${_videoName ?? 'video.mp4'}';
-      final storageRef = FirebaseStorage.instance
+      final ref = FirebaseStorage.instance
           .ref()
           .child('videos/${user.uid}/$fileName');
 
-      late TaskSnapshot uploadTask;
-
+      late TaskSnapshot task;
       if (kIsWeb) {
-        // Web: envia bytes
-        uploadTask = await storageRef.putData(
+        task = await ref.putData(
           _videoBytes!,
           SettableMetadata(contentType: 'video/mp4'),
         );
       } else {
-        // Mobile: envia File
-        uploadTask = await storageRef.putFile(_videoFile!);
+        task = await ref.putFile(_videoFile!);
       }
+      final videoUrl = await task.ref.getDownloadURL();
 
-      final videoUrl = await uploadTask.ref.getDownloadURL();
+      // busca nome do usuário
+      final doc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .get();
+      final nomeUsuario = doc.data()?['nome'] as String? ?? 'Usuário';
 
-      final userDoc = await FirebaseFirestore.instance
-        .collection('usuarios')
-        .doc(user.uid)
-        .get();
-
-      final nomeUsuario = userDoc.data()?['nome'] ?? 'Usuário';
-
-      // Salva metadados no Firestore
+      // salva no Firestore
       await FirebaseFirestore.instance.collection('videos').add({
         'uid'         : user.uid,
         'username'    : nomeUsuario,
         'profileImage': user.photoURL ?? '',
         'titulo'      : titulo,
         'descricao'   : descricao,
+        'receita'     : _receitaCtrl.text.trim(),
+        'nutricao'    : _nutritionText,
         'data'        : FieldValue.serverTimestamp(),
         'likes'       : 0,
         'comments'    : 0,
@@ -130,15 +150,15 @@ class _PublicarPageState extends State<PublicarPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Publicado com sucesso!")),
       );
-      // limpa seleção
+      _tituloCtrl.clear();
+      _descricaoCtrl.clear();
+      _receitaCtrl.clear();
       setState(() {
-        _videoFile = null;
-        _videoBytes = null;
-        _videoName = null;
+        _videoFile     = null;
+        _videoBytes    = null;
+        _videoName     = null;
+        _nutritionText = '';
       });
-      tituloController.clear();
-      descricaoController.clear();
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Erro ao publicar: $e")),
@@ -151,46 +171,127 @@ class _PublicarPageState extends State<PublicarPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Publicar Vídeo')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ElevatedButton.icon(
-              onPressed: _pickVideo,
-              icon: const Icon(Icons.video_library),
-              label: const Text('Escolher Vídeo'),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Publicar vídeo',
+                style: TextStyle(fontSize: 20),
+              ),
             ),
-            if (_videoName != null) ...[
-              const SizedBox(height: 8),
-              Text('Selecionado: $_videoName'),
-            ],
-            const SizedBox(height: 16),
+            // picker quadrado
+            GestureDetector(
+              onTap: _pickVideo,
+              child: SizedBox(
+                width: 200,   // largura fixa
+                height: 200,  // altura fixa (mantém forma quadrada)
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black54, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: _videoName == null
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.play_arrow, size: 48, color: Colors.black54),
+                              SizedBox(height: 8),
+                              Text(
+                                'Selecionar Vídeo',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.videocam, size: 48, color: Colors.black54),
+                              const SizedBox(height: 8),
+                              Text(
+                                _videoName!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+            ),
+
+
+            // receita
+            
+
+            const SizedBox(height: 18),
+
+            // título
             TextField(
-              controller: tituloController,
+              controller: _tituloCtrl,
               decoration: const InputDecoration(
-                labelText: 'Título do vídeo',
+                labelText: 'Título',
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            // descrição
             TextField(
-              controller: descricaoController,
+              controller: _descricaoCtrl,
               decoration: const InputDecoration(
                 labelText: 'Descrição',
                 border: OutlineInputBorder(),
               ),
-              maxLines: 3,
+              maxLines: 2,
             ),
-            const Spacer(),
+            const SizedBox(height: 16),
+
+            TextField(
+              controller: _receitaCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Ingredientes e modo de preparo',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 4,
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _loadingNutrition ? null : _fetchNutrition,
+              child: _loadingNutrition
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Gerar Informação Nutricional com IA',style: TextStyle(fontSize: 15)),
+            ),
+
+            if (_nutritionText.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(_nutritionText),
+              ),
+            ],
+            const SizedBox(height: 16),
+
+            // botão publicar
             SizedBox(
-              width: double.infinity,
-              height: 50,
+              height: 48,
               child: ElevatedButton(
                 onPressed: _isUploading ? null : _uploadAndSave,
                 child: _isUploading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Publicar'),
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Publicar',style: TextStyle(fontSize: 20)),
               ),
             ),
           ],
