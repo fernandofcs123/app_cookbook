@@ -50,7 +50,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDL10RtjnBrCm6dzRkfOBjTnVkjRkYsQew',
+    apiKey: '',
     appId: '1:168677711029:web:2b4400906c8a7defbcf2fc',
     messagingSenderId: '168677711029',
     projectId: 'appcookbook-1cdc4',
@@ -59,7 +59,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCeHWADMK2EzCINzvMOytObC1lEVDxmWcg',
+    apiKey: '',
     appId: '1:168677711029:android:7fb44b6c83b50188bcf2fc',
     messagingSenderId: '168677711029',
     projectId: 'appcookbook-1cdc4',
