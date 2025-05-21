@@ -1,9 +1,6 @@
 import 'package:app_cookbook/ui/elevated_button_widget.dart';
 import 'package:app_cookbook/ui/text_form_field_widget.dart';
 import 'package:app_cookbook/ui/titulo_widget.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:validatorless/validatorless.dart';
 
@@ -23,26 +20,9 @@ class _CadastroPageState extends State<CadastroPage> {
   final _senhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
 
-  void _cadastrar () async {
+  void _cadastrar () {
     if (_formKey.currentState!.validate()){
-      try {
-        final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _senhaController.text.trim(),
-        );
-
-        await FirebaseFirestore.instance.collection("usuarios").doc(cred.user!.uid).set({
-          'nome': _nomeController.text.trim(),
-          'telefone': _telefoneController.text.trim(),
-          'email': _emailController.text.trim(),
-        });
-        Navigator.of(context).pushReplacementNamed("/home");
-        
-      } on FirebaseAuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erro: ${e.message}")),
-        );
-      }
+      Navigator.of(context).pushNamed("/home");
     }
   }
 

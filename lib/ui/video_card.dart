@@ -20,7 +20,9 @@ class VideoCard extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundImage: NetworkImage(video.profileImage),
+                  backgroundImage: video.profileImage.isNotEmpty
+                      ? NetworkImage(video.profileImage)
+                      : const AssetImage("assets/default_profile.png") as ImageProvider,
                 ),
                 const SizedBox(width: 10),
                 Text(
