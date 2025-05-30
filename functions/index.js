@@ -60,7 +60,7 @@ Retorne sucintamente:
 
 
     // 4) Chamada ao endpoint Generative Language v1beta2
-    const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=AIzaSyBSObPPui56x3xKDwXnwkat2SPVHDE2r2Y';
+    const url = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=apikey';
     const resp = await fetch(url, {
       method: 'POST',
       headers: {
